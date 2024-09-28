@@ -1,92 +1,81 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const Category = require("../models/CategoryModel");
+const connectToDatabase = require("../lib/mongodb");
 
-async function createCategory(request, response) {
+async function createCategory(req, res) {
+  await connectToDatabase();
   try {
-    const { name } = request.body;
-    const category = await prisma.category.create({
-      data: {
-        name,
-      },
-    });
-    return response.status(201).json(category);
+    const { name } = req.body;
+    const category = await Category.create({ name });
+    return res.status(201).json(category);
   } catch (error) {
     console.error("Error creating category:", error);
-    return response.status(500).json({ error: "Error creating category" });
+    return res.status(500).json({ error: "Error creating category" });
   }
 }
 
-async function updateCategory(request, response) {
+async function updateCategory(req, res) {
+  await connectToDatabase();
   try {
-    const { id } = request.params;
-    const { name } = request.body;
+    const { id } = req.query;
+    const { name } = req.body;
 
-    const existingCategory = await prisma.category.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
+    const existingCategory = await Category.findById(id);
     if (!existingCategory) {
-      return response.status(404).json({ error: "Category not found" });
+      return res.status(404).json({ error: "Category not found" });
     }
 
-    const updatedCategory = await prisma.category.update({
-      where: {
-        id: existingCategory.id,
-      },
-      data: {
-        name,
-      },
-    });
+    existingCategory.name = name;
+    const updatedCategory = await existingCategory.save();
 
-    return response.status(200).json(updatedCategory);
+    return res.status(200).json(updatedCategory);
   } catch (error) {
-    return response.status(500).json({ error: "Error updating category" });
+    console.error("Error updating category:", error);
+    return res.status(500).json({ error: "Error updating category" });
   }
 }
 
-async function deleteCategory(request, response) {
+async function deleteCategory(req, res) {
+  await connectToDatabase();
   try {
-    const { id } = request.params;
-    await prisma.category.delete({
-      where: {
-        id: id,
-      },
-    });
-    return response.status(204).send();
+    const { id } = req.query;
+    await Category.findByIdAndDelete(id);
+    return res.status(204).send();
   } catch (error) {
-    console.log(error);
-    return response.status(500).json({ error: "Error deleting category" });
+    console.error("Error deleting category:", error);
+    return res.status(500).json({ error: "Error deleting category" });
   }
 }
 
-async function getCategory(request, response) {
-  const { id } = request.params;
-  const category = await prisma.category.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  if (!category) {
-    return response.status(404).json({ error: "Category not found" });
-  }
-  return response.status(200).json(category);
-}
-
-async function getAllCategories(request, response) {
+async function getCategory(req, res) {
+  await connectToDatabase();
   try {
-    const categories = await prisma.category.findMany({});
-    return response.json(categories);
+    const { id } = req.query;
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+    return res.status(200).json(category);
   } catch (error) {
-    return response.status(500).json({ error: "Error fetching categories" });
+    console.error("Error fetching category:", error);
+    return res.status(500).json({ error: "Error fetching category" });
+  }
+}
+
+async function getAllCategories(req, res) {
+  await connectToDatabase();
+  try {
+    const categories = await Category.find({});
+    return res.status(200).json(categories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return res.status(500).json({ error: "Error fetching categories" });
   }
 }
 
 module.exports = {
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getCategory,
   getAllCategories,
+  getCategory,
+  deleteCategory,
+  updateCategory,
+  createCategory,
 };

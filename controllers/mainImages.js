@@ -1,24 +1,27 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+// /pages/api/upload.js
+const { uploadMainImage, upload } = require("../lib/cloudinaryconfig");
 
-async function uploadMainImage(req, res) {
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).json({ message: "Nema otpremljenih fajlova" });
-    }
-  
-    // Get file from a request
-    const uploadedFile = req.files.uploadedFile;
-  
-    // Using mv method for moving file to the directory on the server
-    uploadedFile.mv('../public/' + uploadedFile.name, (err) => {
+const config = {
+  api: {
+    bodyParser: false, // Disable bodyParser to allow file upload
+  },
+};
+
+async function uploadMainImageFile(req, res) {
+  if (req.method === "POST") {
+    // Use multer's upload middleware
+    upload.single("file")(req, res, (err) => {
       if (err) {
-        return res.status(500).send(err);
+        return res.status(500).json({ error: "File upload error" });
       }
-  
-      res.status(200).json({ message: "Fajl je uspešno otpremljen" });
+      uploadMainImage(req, res);
     });
+  } else {
+    res.status(405).json({ message: "Method not allowed" });
   }
+}
 
-  module.exports = {
-    uploadMainImage
+module.exports = {
+  config,
+  uploadMainImageFile,
 };

@@ -1,7 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const CustomerOrder = require("../models/CategoryModel");
+const connectToDatabase = require("../lib/mongodb");
 
-async function createCustomerOrder(request, response) {
+async function createCustomerOrder(req, res) {
+  await connectToDatabase();
   try {
     const {
       name,
@@ -9,7 +10,7 @@ async function createCustomerOrder(request, response) {
       phone,
       email,
       company,
-      adress,
+      address,
       apartment,
       postalCode,
       status,
@@ -17,130 +18,100 @@ async function createCustomerOrder(request, response) {
       country,
       orderNotice,
       total,
-    } = request.body;
-    const corder = await prisma.customer_order.create({
-      data: {
-        name,
-        lastname,
-        phone,
-        email,
-        company,
-        adress,
-        apartment,
-        postalCode,
-        status,
-        city,
-        country,
-        orderNotice,
-        total,
-      },
+    } = req.body;
+
+    const customerOrder = new CustomerOrder({
+      name,
+      lastname,
+      phone,
+      email,
+      company,
+      address,
+      apartment,
+      postalCode,
+      status,
+      city,
+      country,
+      orderNotice,
+      total,
     });
-    return response.status(201).json(corder);
+
+    const savedOrder = await customerOrder.save();
+    return res.status(201).json(savedOrder);
   } catch (error) {
     console.error("Error creating order:", error);
-    return response.status(500).json({ error: "Error creating order" });
+    return res.status(500).json({ error: "Error creating order" });
   }
 }
-
-async function updateCustomerOrder(request, response) {
+async function updateCustomerOrder(req, res) {
+  await connectToDatabase();
   try {
-    const { id } = request.params;
-    const {
-      name,
-      lastname,
-      phone,
-      email,
-      company,
-      adress,
-      apartment,
-      postalCode,
-      dateTime,
-      status,
-      city,
-      country,
-      orderNotice,
-      total,
-    } = request.body;
+    const { id } = req.params;
+    const updateData = req.body;
 
-    const existingOrder = await prisma.customer_order.findUnique({
-      where: {
-        id: id,
-      },
+    const updatedOrder = await CustomerOrder.findByIdAndUpdate(id, updateData, {
+      new: true,
     });
 
-    if (!existingOrder) {
-      return response.status(404).json({ error: "Order not found" });
+    if (!updatedOrder) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    const updatedOrder = await prisma.customer_order.update({
-      where: {
-        id: existingOrder.id,
-      },
-      data: {
-        name,
-        lastname,
-        phone,
-        email,
-        company,
-        adress,
-        apartment,
-        postalCode,
-        dateTime,
-        status,
-        city,
-        country,
-        orderNotice,
-        total,
-      },
-    });
-
-    return response.status(200).json(updatedOrder);
+    return res.status(200).json(updatedOrder);
   } catch (error) {
-    return response.status(500).json({ error: "Error updating order" });
+    console.error("Error updating order:", error);
+    return res.status(500).json({ error: "Error updating order" });
   }
 }
-
-async function deleteCustomerOrder(request, response) {
+async function deleteCustomerOrder(req, res) {
+  await connectToDatabase();
   try {
-    const { id } = request.params;
-    await prisma.customer_order.delete({
-      where: {
-        id: id,
-      },
-    });
-    return response.status(204).send();
+    const { id } = req.params;
+
+    const deletedOrder = await CustomerOrder.findByIdAndDelete(id);
+
+    if (!deletedOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    return res.status(204).send();
   } catch (error) {
-    return response.status(500).json({ error: "Error deleting order" });
+    console.error("Error deleting order:", error);
+    return res.status(500).json({ error: "Error deleting order" });
   }
 }
-
-async function getCustomerOrder(request, response) {
-  const { id } = request.params;
-  const order = await prisma.customer_order.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  if (!order) {
-    return response.status(404).json({ error: "Order not found" });
-  }
-  return response.status(200).json(order);
-}
-
-async function getAllOrders(request, response) {
+async function getCustomerOrder(req, res) {
+  await connectToDatabase();
   try {
-    const orders = await prisma.customer_order.findMany({});
-    return response.json(orders);
+    const { id } = req.params;
+
+    const order = await CustomerOrder.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    return res.status(200).json(order);
   } catch (error) {
-    console.log(error);
-    return response.status(500).json({ error: "Error fetching orders" });
+    console.error("Error fetching order:", error);
+    return res.status(500).json({ error: "Error fetching order" });
+  }
+}
+async function getAllOrders(req, res) {
+  await connectToDatabase();
+  try {
+    const orders = await CustomerOrder.find({});
+    return res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return res.status(500).json({ error: "Error fetching orders" });
   }
 }
 
 module.exports = {
-  createCustomerOrder,
   updateCustomerOrder,
+  createCustomerOrder,
   deleteCustomerOrder,
-  getCustomerOrder,
   getAllOrders,
+  getCustomerOrder,
 };
