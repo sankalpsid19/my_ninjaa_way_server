@@ -1,5 +1,5 @@
 const connectToDatabase = require("../lib/mongodb");
-const Product = require("../models/Product"); // Adjust the path to your Product model
+const Product = require("../models/ProductModel"); // Adjust the path to your Product model
 
 async function getAllProducts(request, response) {
   await connectToDatabase(); // Connect to MongoDB

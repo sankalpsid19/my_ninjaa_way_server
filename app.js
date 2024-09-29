@@ -11,6 +11,7 @@ const slugRouter = require("./routes/slugs");
 const orderProductRouter = require("./routes/customer_order_product");
 const wishlistRouter = require("./routes/wishlist");
 const pingPongRouter = require("./routes/pingPongResponse");
+require("dotenv").config();
 var cors = require("cors");
 
 const app = express();
@@ -37,7 +38,7 @@ app.use("/api/slugs", slugRouter);
 app.use("/api/wishlist", wishlistRouter);
 app.use("/api", pingPongRouter);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -1,5 +1,5 @@
 const connectToDatabase = require("../lib/mongodb");
-const Product = require("../models/Product"); // Adjust the path to your Product model
+const ProductModel = require("../models/ProductModel"); // Adjust the path to your ProductModel model
 
 async function getProductBySlug(request, response) {
   await connectToDatabase(); // Connect to MongoDB
@@ -8,7 +8,7 @@ async function getProductBySlug(request, response) {
 
   try {
     // Find the product by its slug and populate the category field
-    const product = await Product.findOne({ slug }).populate("category");
+    const product = await ProductModel.findOne({ slug }).populate("category");
 
     if (!product) {
       return response.status(404).json({ error: "Product not found" });
