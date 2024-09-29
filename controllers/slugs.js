@@ -1,22 +1,26 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const connectToDatabase = require("../lib/mongodb");
+const Product = require("../models/Product"); // Adjust the path to your Product model
 
 async function getProductBySlug(request, response) {
-  const { slug } = request.params;
-  const product = await prisma.product.findMany({
-    where: {
-      slug: slug,
-    },
-    include: {
-      category: true
-    },
-  });
+  await connectToDatabase(); // Connect to MongoDB
 
-  const foundProduct = product[0]; // Assuming there's only one product with that slug
-  if (!foundProduct) {
-    return response.status(404).json({ error: "Product not found" });
+  const { slug } = request.params;
+
+  try {
+    // Find the product by its slug and populate the category field
+    const product = await Product.findOne({ slug }).populate("category");
+
+    if (!product) {
+      return response.status(404).json({ error: "Product not found" });
+    }
+
+    return response.status(200).json(product);
+  } catch (error) {
+    console.error("Error fetching product by slug:", error);
+    return response
+      .status(500)
+      .json({ error: "Error fetching product by slug" });
   }
-  return response.status(200).json(foundProduct);
 }
 
 module.exports = { getProductBySlug };

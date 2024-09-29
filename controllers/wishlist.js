@@ -1,14 +1,12 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const bcrypt = require("bcryptjs");
+const connectToDatabase = require("../lib/mongodb");
+const Wishlist = require("../models/Wishlist"); // Adjust the path to your Wishlist model
+const Product = require("../models/Product"); // Adjust the path to your Product model
 
 async function getAllWishlist(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   try {
-    const wishlist = await prisma.wishlist.findMany({
-      include: {
-        product: true, // Include product details
-      },
-    });
+    const wishlist = await Wishlist.find({}).populate("product");
     return response.json(wishlist);
   } catch (error) {
     return response.status(500).json({ error: "Error fetching wishlist" });
@@ -16,17 +14,11 @@ async function getAllWishlist(request, response) {
 }
 
 async function getAllWishlistByUserId(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
   const { userId } = request.params;
+
   try {
-    // getting all products by userId
-    const wishlist = await prisma.wishlist.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
-        product: true, // Include product details
-      },
-    });
+    const wishlist = await Wishlist.find({ userId }).populate("product");
     return response.json(wishlist);
   } catch (error) {
     return response.status(500).json({ error: "Error fetching wishlist" });
@@ -34,14 +26,15 @@ async function getAllWishlistByUserId(request, response) {
 }
 
 async function createWishItem(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
   try {
     const { userId, productId } = request.body;
-    const wishItem = await prisma.wishlist.create({
-      data: {
-        userId,
-        productId,
-      },
+    const wishItem = new Wishlist({
+      userId,
+      productId,
     });
+
+    await wishItem.save();
     return response.status(201).json(wishItem);
   } catch (error) {
     console.error("Error creating wish item:", error);
@@ -50,37 +43,25 @@ async function createWishItem(request, response) {
 }
 
 async function deleteWishItem(request, response) {
-  try {
-    const { userId, productId } = request.params;
-    
-    await prisma.wishlist.deleteMany({
-      where: {
-        userId: userId,
-        productId: productId,
-      },
-    });
-    
-    return response.status(204).send();
+  await connectToDatabase(); // Connect to MongoDB
+  const { userId, productId } = request.params;
 
+  try {
+    await Wishlist.deleteMany({ userId, productId });
+    return response.status(204).send();
   } catch (error) {
     console.log(error);
     return response.status(500).json({ error: "Error deleting wish item" });
   }
 }
 
-async function getSingleProductFromWishlist(request, response){
-  try {
-    const { userId, productId } = request.params;
-    
-    const wishItem = await prisma.wishlist.findMany({
-      where: {
-        userId: userId,
-        productId: productId,
-      },
-    });
-    
-    return response.status(200).json(wishItem);
+async function getSingleProductFromWishlist(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+  const { userId, productId } = request.params;
 
+  try {
+    const wishItem = await Wishlist.findOne({ userId, productId });
+    return response.status(200).json(wishItem);
   } catch (error) {
     console.log(error);
     return response.status(500).json({ error: "Error getting wish item" });
@@ -88,28 +69,23 @@ async function getSingleProductFromWishlist(request, response){
 }
 
 async function deleteAllWishItemByUserId(request, response) {
-  try {
-    const { userId } = request.params;
-    
-    await prisma.wishlist.deleteMany({
-      where: {
-        userId: userId,
-      },
-    });
-    
-    return response.status(204).send();
+  await connectToDatabase(); // Connect to MongoDB
+  const { userId } = request.params;
 
+  try {
+    await Wishlist.deleteMany({ userId });
+    return response.status(204).send();
   } catch (error) {
     console.log(error);
-    return response.status(500).json({ error: "Error deleting wish item" });
+    return response.status(500).json({ error: "Error deleting wish items" });
   }
 }
-
 
 module.exports = {
   getAllWishlistByUserId,
   getAllWishlist,
   createWishItem,
   deleteWishItem,
-  getSingleProductFromWishlist
+  getSingleProductFromWishlist,
+  deleteAllWishItemByUserId,
 };

@@ -1,10 +1,12 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const connectToDatabase = require("../lib/mongodb");
+const User = require("../models/User"); // Adjust the path to your User model
 const bcrypt = require("bcryptjs");
 
 async function getAllUsers(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   try {
-    const users = await prisma.user.findMany({});
+    const users = await User.find({});
     return response.json(users);
   } catch (error) {
     return response.status(500).json({ error: "Error fetching users" });
@@ -12,17 +14,19 @@ async function getAllUsers(request, response) {
 }
 
 async function createUser(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   try {
     const { email, password, role } = request.body;
     const hashedPassword = await bcrypt.hash(password, 5);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-      },
+    const user = new User({
+      email,
+      password: hashedPassword,
+      role,
     });
+
+    await user.save();
     return response.status(201).json(user);
   } catch (error) {
     console.error("Error creating user:", error);
@@ -31,45 +35,36 @@ async function createUser(request, response) {
 }
 
 async function updateUser(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   try {
     const { id } = request.params;
     const { email, password, role } = request.body;
     const hashedPassword = await bcrypt.hash(password, 5);
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-    });
 
-    if (!existingUser) {
+    const user = await User.findById(id);
+
+    if (!user) {
       return response.status(404).json({ error: "User not found" });
     }
 
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: existingUser.id,
-      },
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-      },
-    });
+    user.email = email;
+    user.password = hashedPassword;
+    user.role = role;
 
-    return response.status(200).json(updatedUser);
+    await user.save();
+    return response.status(200).json(user);
   } catch (error) {
     return response.status(500).json({ error: "Error updating user" });
   }
 }
 
 async function deleteUser(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   try {
     const { id } = request.params;
-    await prisma.user.delete({
-      where: {
-        id: id,
-      },
-    });
+    await User.findByIdAndDelete(id);
     return response.status(204).send();
   } catch (error) {
     console.log(error);
@@ -78,29 +73,37 @@ async function deleteUser(request, response) {
 }
 
 async function getUser(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   const { id } = request.params;
-  const user = await prisma.user.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  if (!user) {
-    return response.status(404).json({ error: "User not found" });
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    return response.status(200).json(user);
+  } catch (error) {
+    return response.status(500).json({ error: "Error fetching user" });
   }
-  return response.status(200).json(user);
 }
 
 async function getUserByEmail(request, response) {
+  await connectToDatabase(); // Connect to MongoDB
+
   const { email } = request.params;
-  const user = await prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
-  if (!user) {
-    return response.status(404).json({ error: "User not found" });
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    return response.status(200).json(user);
+  } catch (error) {
+    return response.status(500).json({ error: "Error fetching user by email" });
   }
-  return response.status(200).json(user);
 }
 
 module.exports = {
