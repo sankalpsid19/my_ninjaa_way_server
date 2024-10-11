@@ -11,6 +11,7 @@ const slugRouter = require("./routes/slugs");
 const orderProductRouter = require("./routes/customer_order_product");
 const wishlistRouter = require("./routes/wishlist");
 const pingPongRouter = require("./routes/pingPongResponse");
+const loginRouter = require("./routes/login");
 require("dotenv").config();
 var cors = require("cors");
 
@@ -36,6 +37,7 @@ app.use("/api/orders", orderRouter);
 app.use("/api/order-product", orderProductRouter);
 app.use("/api/slugs", slugRouter);
 app.use("/api/wishlist", wishlistRouter);
+app.use("/api/login", loginRouter);
 app.use("/api", pingPongRouter);
 
 const PORT = process.env.PORT;
