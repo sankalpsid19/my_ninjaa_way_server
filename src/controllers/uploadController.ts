@@ -1,7 +1,7 @@
 // src/controllers/uploadController.js
-const cloudinary = require("../cloudinaryConfig");
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+import cloudinary from "../config/cloudinaryConfig";
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 // Set up Cloudinary storage for PDFs
 const storage = new CloudinaryStorage({
@@ -9,7 +9,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "pdfs", // Specify the folder in Cloudinary
     allowedFormats: ["pdf"], // Allow only PDF uploads
-  },
+  } as any, // Assert 'params' as any to bypass the TypeScript check
 });
 
 const upload = multer({ storage });

@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "module": "commonjs",
+    "module": "ESNext",       // Ensure you're using an ES module target like "ESNext" or "ES6"
     "outDir": "./dist",
+    "moduleResolution": "node",
     "rootDir": "./src",
     "jsx": "react", // Enable support for JSX in TypeScript
     "strict": true,
-    "esModuleInterop": true
+    "skipLibCheck": true,     // Optional, skips checking of .d.ts files
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true // Allows synthetic default imports
+
   },
-  "include": ["./src/**/*", "src/index.tsx"],
+  "include": ["./src/**/*", "src/index.ts"],
   "exclude": ["node_modules"]
 }
