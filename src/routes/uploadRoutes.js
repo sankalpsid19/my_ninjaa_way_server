@@ -1,10 +1,10 @@
 // src/routes/uploadRoutes.js
-import express from "express";
-import {
+const express = require("express");
+const {
+  uploadMiddleware,
   uploadPdf,
   fetchPdfs,
-  uploadMiddleware,
-} from "../controllers/uploadController";
+} = require("../controllers/uploadController");
 
 const router = express.Router();
 
@@ -14,4 +14,4 @@ router.post("/upload", uploadMiddleware, uploadPdf);
 // Route to retrieve PDFs
 router.get("/pdfs", fetchPdfs);
 
-export default router;
+module.exports = router;
