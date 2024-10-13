@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const uploadRoutes = require("./routes/uploadRoutes"); // Ensure this path is correct
+const uploadRoutes = require("./src/routes/uploadRoutes"); // Ensure this path is correct
 const cors = require("cors");
 
 dotenv.config();
