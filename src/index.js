@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const uploadRoutes = require("./routes/uploadRoutes"); // Ensure this path is correct
+const cors = require("cors");
 
 dotenv.config();
 const app = express();
@@ -15,7 +16,7 @@ app.use(express.json());
 app.use("/api", uploadRoutes); // This will prefix all routes in uploadRoutes with /api
 
 // Simple route for health check
-app.get("/", (req, res) => {
+app.get("/ping", (req, res) => {
   res.json({ message: "Pong!" });
 });
 
