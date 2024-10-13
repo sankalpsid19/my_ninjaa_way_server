@@ -12,7 +12,9 @@ app.use(express.json());
 
 // Use the upload routes
 app.use("/api", uploadRoutes); // This will prefix all routes in uploadRoutes with /api
-
+app.get("/", (req, res) => {
+  res.json({ message: "Pong!" });
+});
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("Connected to MongoDB"))
